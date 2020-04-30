@@ -1,40 +1,50 @@
 import * as cheerio from 'cheerio';
 import { Tabletojson } from 'tabletojson';
+import { LineItem } from './manifest.interface';
+import Product from '../product/product.model';
 
-export class Manifest {
-  items = [];
+export default class Manifest {
+  lineItems: LineItem[] = [];
   totals;
 
-  constructor(rawData: string) {
-    this.parse(rawData);
+  static async create(htmlData: string) {
+    const manifest = new Manifest();
+    await manifest.parse(htmlData);
+    return manifest;
   }
 
-  public parse(rawData) {
-    const $ = cheerio.load(rawData);
+  public async parse(htmlData) {
+    const $ = cheerio.load(htmlData);
     const table = cheerio.html($('table table'));
     const converted = Tabletojson.convert(table, {
       useFirstRowForHeadings: true,
     })[0];
 
     this.totals = converted.pop();
-    const stuff = converted.slice(1).map(this.parseItem);
+    const items: LineItem[] = await Promise.all(
+      converted.slice(1, 3).map(this.createLineItem),
+    );
     // Consolidate same rows into quantity
-    for (const item of stuff) {
-      const lastSavedItem = this.items[this.items.length - 1];
-      if (lastSavedItem?.name === item.name) {
+    for (const lineItem of items) {
+      const lastSavedItem = this.lineItems[this.lineItems.length - 1];
+      if (lastSavedItem?.product.name === lineItem.product.name) {
         lastSavedItem.quantity++;
       } else {
-        this.items.push(item);
+        this.lineItems.push(lineItem);
       }
     }
   }
 
-  private parseItem(item) {
+  private async createLineItem(obj): Promise<LineItem> {
+    const product = await Product.getOrCreate(
+      obj['Product'],
+      obj['Retail Price'].replace('$', ''),
+    );
+
+    // console.log('Manifest -> product', product);
     return {
-      name: item.Product,
-      retailPrice: item['Retail Price'].replace('$', ''),
-      // totalRetailPrice: item['Total Retail Price'].replace('$', ''),
-      quantity: parseInt(item.Quantity),
+      product,
+      quantity: parseInt(obj.Quantity),
     };
   }
 }

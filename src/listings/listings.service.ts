@@ -30,9 +30,11 @@ export class ListingsService {
 
   async getHistogram(id: string) {
     const listing = await this.getListing(id);
-    const csv = listing.items.reduce(
-      (acc, item) => {
-        const filledArray = new Array(item.quantity).fill(item.retailPrice);
+    const csv = listing.lineItems.reduce(
+      (acc, line) => {
+        const filledArray = new Array(line.quantity).fill(
+          line.product.retailPrice,
+        );
         return [...acc, ...filledArray];
       },
       ['price'],
