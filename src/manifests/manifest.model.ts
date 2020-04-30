@@ -2,7 +2,7 @@ import * as cheerio from 'cheerio';
 import { Tabletojson } from 'tabletojson';
 
 export class Manifest {
-  items;
+  items = [];
   totals;
 
   constructor(rawData: string) {
@@ -17,7 +17,16 @@ export class Manifest {
     })[0];
 
     this.totals = converted.pop();
-    this.items = converted.slice(1).map(this.parseItem);
+    const stuff = converted.slice(1).map(this.parseItem);
+    // Consolidate same rows into quantity
+    for (const item of stuff) {
+      const lastSavedItem = this.items[this.items.length - 1];
+      if (lastSavedItem?.name === item.name) {
+        lastSavedItem.quantity++;
+      } else {
+        this.items.push(item);
+      }
+    }
   }
 
   private parseItem(item) {
