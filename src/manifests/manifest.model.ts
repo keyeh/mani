@@ -22,7 +22,7 @@ export default class Manifest {
 
     this.totals = converted.pop();
     const items: LineItem[] = await Promise.all(
-      converted.slice(1, 3).map(this.createLineItem),
+      converted.slice(1).map(this.createLineItem),
     );
     // Consolidate same rows into quantity
     for (const lineItem of items) {
