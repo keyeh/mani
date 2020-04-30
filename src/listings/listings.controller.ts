@@ -11,14 +11,14 @@ export class ListingsController {
     return { id: addedId };
   }
 
-  @Get()
-  getAllListings() {
-    return this.listingsService.getListing();
-  }
+  //   @Get()
+  //   getAllListings() {
+  //     return this.listingsService.getListing();
+  //   }
 
   @Get(':id')
-  getListing(@Param('id') id: string) {
-    return this.listingsService.getListing(id);
+  async getListing(@Param('id') id: string) {
+    return await this.listingsService.getListing(id);
   }
 
   @Get(':id/histogram.csv')

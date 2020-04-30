@@ -1,34 +1,35 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { Listing } from './listing.model';
+import * as firebase from 'firebase';
+import { classToPlain, plainToClass } from 'class-transformer';
 
 @Injectable()
 export class ListingsService {
-  private listings: Listing[] = [];
+  addListing(url: string): string {
+    const listings = firebase.database().ref('listings');
+    const key = listings.push().key;
 
-  private getRandomArbitrary(min, max) {
-    return Math.random() * (max - min) + min;
+    const listing = new Listing(key, url);
+    listing.scrape();
+    listings.update({ [key]: classToPlain(listing) });
+    return key;
   }
 
-  addListing(title: string) {
-    const id = '1';
-    const listing = new Listing(id, title);
-    this.listings.push(listing);
-    return id;
-  }
-
-  getListing(id?: string) {
-    if (id) {
-      const listing = this.listings.find(l => l.id === id);
-      if (listing) {
-        return listing;
-      }
-      throw new NotFoundException(`Could not find listing ${id}`);
+  async getListing(id: string): Promise<Listing> {
+    const json = await new Promise(resolve =>
+      firebase
+        .database()
+        .ref('listings/' + id)
+        .once('value', snapshot => resolve(snapshot.val())),
+    );
+    if (json) {
+      return plainToClass(Listing, json);
     }
-    return this.listings;
+    throw new NotFoundException();
   }
 
-  getHistogram(id: string) {
-    const listing: any = this.getListing(id);
+  async getHistogram(id: string) {
+    const listing = await this.getListing(id);
     const csv = listing.items.reduce(
       (acc, item) => {
         const filledArray = new Array(item.quantity).fill(item.retailPrice);
