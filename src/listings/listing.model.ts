@@ -1,8 +1,9 @@
 import { Manifest } from 'src/manifests/manifest.model';
 import axios from 'axios';
+import data from './mock';
 
 export class Listing {
-  private manifest;
+  public items;
 
   constructor(public id: string, public url: string) {
     this.scrape();
@@ -10,8 +11,9 @@ export class Listing {
 
   async scrape() {
     console.log(this.url);
-    const res = await axios.get(this.url);
-    const data = res.data;
-    this.manifest = new Manifest(data.toString());
+    // const res = await axios.get(this.url);
+    // const data = res.data;
+    const manifest = new Manifest(data);
+    this.items = manifest.items;
   }
 }

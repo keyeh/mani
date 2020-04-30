@@ -1,4 +1,4 @@
-import { Controller, Post, Body, Get, Param } from '@nestjs/common';
+import { Controller, Post, Body, Get, Param, Header } from '@nestjs/common';
 import { ListingsService } from './listings.service';
 
 @Controller('listings')
@@ -19,5 +19,11 @@ export class ListingsController {
   @Get(':id')
   getListing(@Param('id') id: string) {
     return this.listingsService.getListing(id);
+  }
+
+  @Get(':id/histogram.csv')
+  @Header('content-type', 'text/csv')
+  getHistogram(@Param('id') id: string) {
+    return this.listingsService.getHistogram(id);
   }
 }
