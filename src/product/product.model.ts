@@ -1,5 +1,4 @@
 import * as firebase from 'firebase';
-import { classToPlain, plainToClass } from 'class-transformer';
 
 export default class Product {
   public research = 'wowowo';
@@ -11,8 +10,8 @@ export default class Product {
     public retailPrice: string,
   ) {}
 
-  public static async getOrCreate(name: string, retailPrice: string) {
-    const existingProduct: any = await new Promise(resolve =>
+  public static async findByName(name): Promise<{}> {
+    return new Promise(resolve =>
       firebase
         .database()
         .ref('products')
@@ -26,15 +25,17 @@ export default class Product {
           resolve(null);
         }),
     );
-    if (existingProduct) {
-      console.log('Product -> getOrCreate -> existingProduct', existingProduct);
-      return plainToClass(Product, existingProduct);
-    } else {
-      const products = firebase.database().ref('products');
-      const key = products.push().key;
-      const newProduct = new Product(key, name, retailPrice);
-      products.update({ [key]: newProduct });
-      return newProduct;
-    }
+  }
+
+  public static async create(
+    name: string,
+    retailPrice: string,
+  ): Promise<Product> {
+    const products = firebase.database().ref('products');
+    const key = products.push().key;
+    const newProduct = new Product(key, name, retailPrice);
+    return await new Promise(resolve =>
+      products.update({ [key]: newProduct }).then(() => resolve(newProduct)),
+    );
   }
 }

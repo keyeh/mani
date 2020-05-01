@@ -1,7 +1,7 @@
 import * as cheerio from 'cheerio';
 import { Tabletojson } from 'tabletojson';
 import { LineItem } from './manifest.interface';
-import Product from '../product/product.model';
+import { ProductService } from '../product/product.service';
 
 export default class Manifest {
   lineItems: LineItem[] = [];
@@ -36,12 +36,11 @@ export default class Manifest {
   }
 
   private async createLineItem(obj): Promise<LineItem> {
-    const product = await Product.getOrCreate(
+    const product = await ProductService.getOrCreate(
       obj['Product'],
       obj['Retail Price'].replace('$', ''),
     );
 
-    // console.log('Manifest -> product', product);
     return {
       product,
       quantity: parseInt(obj.Quantity),
