@@ -2,14 +2,19 @@ import * as cheerio from 'cheerio';
 import { Tabletojson } from 'tabletojson';
 import { LineItem } from './manifest.interface';
 import { ProductService } from '../product/product.service';
+import * as firebase from 'firebase';
 
 export default class Manifest {
   lineItems: LineItem[] = [];
-  totals;
+  totalRetailPrice;
 
-  static async create(htmlData: string) {
+  static async create(id, htmlData: string) {
     const manifest = new Manifest();
     await manifest.parse(htmlData);
+    firebase
+      .database()
+      .ref(`manifests/${id}`)
+      .set(manifest);
     return manifest;
   }
 
@@ -20,7 +25,9 @@ export default class Manifest {
       useFirstRowForHeadings: true,
     })[0];
 
-    this.totals = converted.pop();
+    const totals = converted.pop();
+    this.totalRetailPrice = totals['Total Retail Price'];
+
     const items: LineItem[] = await Promise.all(
       converted.slice(1).map(this.createLineItem),
     );

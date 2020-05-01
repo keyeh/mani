@@ -11,10 +11,10 @@ export class ListingsController {
     return { id: addedId };
   }
 
-  //   @Get()
-  //   getAllListings() {
-  //     return this.listingsService.getListing();
-  //   }
+  @Get()
+  getAllListings() {
+    return this.listingsService.getAllListings();
+  }
 
   @Get(':id')
   async getListing(@Param('id') id: string) {
